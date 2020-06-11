@@ -1,0 +1,76 @@
+version: '3.7'
+services:
+
+  redmine4:
+    image: redmine:4.1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./redmine/files:/usr/src/redmine/files
+      - ./redmine/log:/usr/src/redmine/log
+      - ./redmine/plugins:/usr/src/redmine/plugins
+      - ./redmine/public/themes:/usr/src/redmine/public/themes
+    env_file: ./env/redmine.env #write yourself
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "docker.redmine4"
+
+  nginx:
+    image: nginx:1.17.8
+    depends_on:
+      - redmine4
+    volumes:
+      - ./nginx/:/etc/nginx/
+    ports:
+      - "80:80"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "docker.nginx"
+
+  postgres:
+    image: postgres:12.2-alpine
+    depends_on:
+      - fluentd
+    ports:
+      - "5432:5432"
+    command: >
+        bash -c "chmod -R +x /usr/cron/
+        && crontab /usr/cron/cron.conf
+        && crond -l 2
+        && docker-entrypoint.sh postgres"
+      # cron exec
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./postgres/conf/postgresql.conf:/tmp/pgconf/postgresql.conf #conf mv
+      - ./postgres/dump/:/tmp/pgdump/ #for pgdump
+      - ./postgres/pglog/:/var/log/postgresql/ #postgres log output
+      - ./cron:/usr/cron/ #cron exec
+      - ./redmine/files:/usr/src/redmine/files #ref redmine file backup
+      - ./redmine/datadump:/tmp/datadump/ #for redmine data backup
+    env_file: ./env/posgres.env #write yourself
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "docker.postgres"
+
+
+  fluentd:
+    image: fluent/fluentd:v1.9-1
+    command: >
+      /usr/bin/fluentd -c /fluentd/etc/fluent.conf -v
+    ports:
+      - "127.0.0.1:24224:24224"
+      - "127.0.0.1:24224:24224/udp"
+    volumes:
+      - ./log:/fluentd/log
+      - ./fluent.conf:/fluentd/etc/fluent.conf:ro
+
+volumes:
+  dbdata:

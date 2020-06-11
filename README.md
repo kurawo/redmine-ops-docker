@@ -18,10 +18,14 @@ by yourself.
 ## git clone
 
 ```
-git clone this-git-path
+git clone https://github.com/kurawo/redmine-ops-docker.git
 ```
 
 ## env file add
+
+```
+cd redmine-ops-docker/
+```
 
 ```
 vi env/posgres.env

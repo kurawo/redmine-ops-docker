@@ -27,6 +27,7 @@ services:
       - ./nginx/:/etc/nginx/
     ports:
       - "80:80"
+      #- "443:443"
     logging:
       driver: "fluentd"
       options:

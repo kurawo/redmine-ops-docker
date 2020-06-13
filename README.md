@@ -68,3 +68,112 @@ docker-compose up -d
 ```
 docker-compose down
 ```
+
+## When use self certificate on nginx container
+
+containers down.
+
+```
+docker-compose down
+```
+
+ref: [nginx で オレオレ証明書をする https://qiita.com/snowdog/items/9c96ee0fa6ed096e8940](https://qiita.com/snowdog/items/9c96ee0fa6ed096e8940)
+
+install openssl in Docker Host.
+
+```
+apt-get install openssl
+```
+
+create working directory.
+
+```
+mkdir /etc/nginx
+mkdir /etc/nginx/ssl
+```
+
+create Private key.
+
+```
+openssl genrsa -out /etc/nginx/ssl/server.key 2048
+```
+
+```
+openssl req -new -key /etc/nginx/ssl/server.key -out /etc/nginx/ssl/server.csr
+```
+
+enter server domain name (or fqdn) the commmon name.
+
+create crt myself.
+
+```
+penssl x509 -days 3650 -req -signkey /etc/nginx/ssl/server.key -in /etc/nginx/ssl/server.csr -out /etc/nginx/ssl/server.crt
+```
+
+docker-compose.yml commentout and uncomment.
+
+before:
+
+```
+  nginx:
+    image: nginx:1.17.8
+    [...]
+    ports:
+      - "80:80"
+      #- "443:443"
+```
+
+after:
+
+```
+  nginx:
+    image: nginx:1.17.8
+    [...]
+    ports:
+      #- "80:80"
+      - "443:443"
+```
+
+./nginx/nginx.conf commentout and uncomment.
+
+before:
+
+```
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        # listen       443 ssl http2 default_server;
+        # listen       [::]:443 ssl http2 default_server;
+        client_max_body_size    4G;
+
+        # ssl_certificate     /etc/nginx/ssl/server.crt;
+        # ssl_certificate_key /etc/nginx/ssl/server.key;
+```
+
+after:
+
+```
+    server {
+        #listen       80 default_server;
+        #listen       [::]:80 default_server;
+        listen       443 ssl http2 default_server;
+        listen       [::]:443 ssl http2 default_server;
+        client_max_body_size    4G;
+
+        ssl_certificate     /etc/nginx/ssl/server.crt;
+        ssl_certificate_key /etc/nginx/ssl/server.key;
+```
+
+copy private key and crt from working directory.
+
+```
+cd redmine-ops-docker
+cp /etc/nginx/ssl/server.crt ./nginx/ssl/
+cp /etc/nginx/ssl/server.key ./nginx/ssl/
+```
+
+containers up.
+
+```
+docker-compose up -d
+```

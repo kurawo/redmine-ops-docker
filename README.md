@@ -107,10 +107,16 @@ enter server domain name (or fqdn) the commmon name.
 create crt myself.
 
 ```
-penssl x509 -days 3650 -req -signkey /etc/nginx/ssl/server.key -in /etc/nginx/ssl/server.csr -out /etc/nginx/ssl/server.crt
+openssl x509 -days 3650 -req -signkey /etc/nginx/ssl/server.key -in /etc/nginx/ssl/server.csr -out /etc/nginx/ssl/server.crt
 ```
 
-docker-compose.yml commentout and uncomment.
+use branch https.
+
+```
+git pull origin https
+```
+
+or docker-compose.yml commentout and uncomment.
 
 before:
 

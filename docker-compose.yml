@@ -28,11 +28,11 @@ services:
     ports:
       #- "80:80"
       - "443:443"
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: "localhost:24224"
-        tag: "docker.nginx"
+        #logging:
+        #driver: "fluentd"
+        #options:
+        #fluentd-address: "localhost:24224"
+        #tag: "docker.nginx"
 
   postgres:
     image: postgres:12.2-alpine
